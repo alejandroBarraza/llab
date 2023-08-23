@@ -7,7 +7,7 @@ import {
 } from '../controllers/task.controller.js'
 const router = Router()
 
-router.get('/task,', getTasks)
+router.get('/tasks', getTasks)
 router.post('/task', createTask)
 router.put('/task/:id', updateTaskById)
 router.delete('/task/:id', deleteTaskById)
