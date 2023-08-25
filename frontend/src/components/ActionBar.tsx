@@ -1,13 +1,23 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button, Grid } from '@mui/material'
 import { SelectItem } from './SelectItem'
-// import { SearchBar } from './SearchBar'
 import TextField from '@mui/material/TextField'
+import { searchTasks } from '../features/task/TaskSlice'
+import { useDispatch } from 'react-redux'
 export const ActionBar = () => {
-  //   const handleSearch = (query: string) => {
-  //     console.log('Search query:', query)
-  //     // Aquí podrías implementar la lógica de búsqueda real
-  //   }
+  const [searchQuery, setSearchQuery] = useState('')
+  const dispatch = useDispatch()
+
+  useEffect(() => {}, [searchQuery])
+
+  const onSearchText = () => {
+    dispatch(
+      searchTasks({
+        text: searchQuery,
+      })
+    )
+  }
+
   return (
     <Grid container marginBottom={4} marginTop={4}>
       <Grid item sm={6} textAlign='left'>
@@ -21,6 +31,10 @@ export const ActionBar = () => {
           label='Buscar'
           variant='outlined'
           size='small'
+          value={searchQuery}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setSearchQuery(e.target.value)
+          }}
         />
       </Grid>
       <Grid item sm={3} textAlign='right'>
