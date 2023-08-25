@@ -4,7 +4,7 @@ import { Task } from '../model/Task.js'
 export async function getTasks(req, res) {
   try {
     const tasks = await Task.findAll({
-      order: [['id', 'DESC']],
+      order: [['dueDate', 'DESC']],
     })
     res.json(tasks)
   } catch (error) {
@@ -28,6 +28,7 @@ export async function createTask(req, res) {
 
 // delete a task by id
 export async function deleteTaskById(req, res, next) {
+  console.log(req.params)
   try {
     const { id } = req.params
     const task = await Task.findByPk(id)
@@ -40,7 +41,8 @@ export async function deleteTaskById(req, res, next) {
 
     res.json({ message: 'Tarea eliminada con éxito' })
   } catch (error) {
-    next(error)
+    // next(error)
+    return res.status(500).json({ message: error.message })
   }
 }
 
@@ -48,7 +50,7 @@ export async function deleteTaskById(req, res, next) {
 export async function updateTaskById(req, res, next) {
   try {
     const { id } = req.params
-    const { name, done } = req.body
+    const { description, dueDate, isDone } = req.body
 
     const task = await Task.findByPk(id)
 
@@ -56,10 +58,11 @@ export async function updateTaskById(req, res, next) {
       return res.status(404).json({ message: 'Tarea no encontrada' })
     }
 
-    await task.update({ name, done })
+    await task.update({ description, dueDate, isDone })
 
     res.json({ message: 'Tarea actualizada con éxito' })
   } catch (error) {
-    next(error)
+    // next(error)
+    return res.status(500).json({ message: error.message })
   }
 }
