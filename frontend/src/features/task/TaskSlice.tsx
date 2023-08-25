@@ -1,37 +1,147 @@
-import { createSlice } from '@reduxjs/toolkit'
-import type { PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 
-export interface TaskState {
-  id: number
-  description: string
-  date: string
-}
+// get all tasks
+export const getTasksAsync = createAsyncThunk(
+  'tasks/getTasksAsync',
+  async () => {
+    const resp = await fetch('http://localhost:4000/tasks')
+    if (resp.ok) {
+      const tasks = await resp.json()
+      return { tasks }
+    }
+  }
+)
 
-const initialState: TaskState = {
-  value: 0,
-}
+// crate anew task
+export const createTaskAsync = createAsyncThunk(
+  'tasks/addTaskAsync',
+  async (payload) => {
+    console.log(payload)
+    const resp = await fetch('http://localhost:4000/task', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        description: payload.description,
+        dueDate: payload.dueDate,
+      }),
+    })
+
+    if (resp.ok) {
+      const task = await resp.json()
+      return { task }
+    }
+  }
+)
+
+// update checked button
+export const toggleCompleteAsync = createAsyncThunk(
+  'tasks/completeTodoAsync',
+  async (payload) => {
+    const resp = await fetch(`http://localhost:4000/task/${payload.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: payload.id, isDone: payload.isDone }),
+    })
+
+    if (resp.ok) {
+      const task = await resp.json()
+      return { task }
+    }
+  }
+)
+
+export const updateDateAsync = createAsyncThunk(
+  'tasks/updateTaskAsync',
+  async (payload) => {
+    const resp = await fetch(`http://localhost:4000/task/${payload.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: payload.id, dueDate: payload.dueDate }),
+    })
+
+    if (resp.ok) {
+      const task = await resp.json()
+      return { task }
+    }
+  }
+)
+
+// delete task
+export const deleteTaskAsync = createAsyncThunk(
+  'tasks/deleteTodoAsync',
+  async (payload) => {
+    const resp = await fetch(`http://localhost:4000/task/${payload.id}`, {
+      method: 'DELETE',
+    })
+
+    if (resp.ok) {
+      return { id: payload.id }
+    }
+  }
+)
 
 export const taskSlice = createSlice({
-  name: 'task',
-  initialState,
+  name: 'tasks',
+  initialState: [],
   reducers: {
-    increment: (state) => {
-      // Redux Toolkit allows us to write "mutating" logic in reducers. It
-      // doesn't actually mutate the state because it uses the Immer library,
-      // which detects changes to a "draft state" and produces a brand new
-      // immutable state based off those changes
-      state.value += 1
+    createTask: (state, action) => {
+      const task = {
+        description: action.payload.description,
+        dueDate: action.payload.dueDate,
+      }
+      state.push(task)
     },
-    decrement: (state) => {
-      state.value -= 1
+    toggleComplete: (state, action) => {
+      const index = state.findIndex((task) => task.id === action.payload.id)
+      state[index].isDone = action.payload.isDone
     },
-    incrementByAmount: (state, action: PayloadAction<number>) => {
-      state.value += action.payload
+    deleteTask: (state, action) => {
+      return state.filter((task) => task.id !== action.payload.id)
+    },
+
+    searchTasks: (state, action) => {
+      state = state.filter((task) => task.description.toLowerCase().includes())
+    },
+  },
+
+  extraReducers: {
+    [getTasksAsync.fulfilled]: (state, action) => {
+      return action.payload.tasks
+    },
+    [createTaskAsync.fulfilled]: (state, action) => {
+      state.push(action.payload.task)
+    },
+    [toggleCompleteAsync.fulfilled]: (state, action) => {
+      console.log(action.payload)
+      const index = state.findIndex(
+        (task) => task.id === action.payload.task.id
+      )
+      state[index].isDone = action.payload.task.isDone
+    },
+
+    [updateDateAsync.fulfilled]: (state, action) => {
+      console.log(action.payload)
+      const taskUpdate = state.find(
+        (task) => task.id === action.payload.task.id
+      )
+      console.log(taskUpdate)
+      taskUpdate.dateDue = action.payload.task.dateDue
+    },
+
+    [deleteTaskAsync.fulfilled]: (state, action) => {
+      return state.filter((task) => task.id !== action.payload.id)
     },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { increment, decrement, incrementByAmount } = taskSlice.actions
+export const { createTask, toggleComplete, deleteTask, searchTasks } =
+  taskSlice.actions
 
 export default taskSlice.reducer
